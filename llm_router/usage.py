@@ -1,42 +1,53 @@
-"Usage tracking for API calls."
+"""Usage tracking for LLM providers."""
 
 import json
+import time
 from pathlib import Path
-from datetime import date
 from typing import Dict, Any
 
 class UsageTracker:
-    "Track API usage and costs."
+    """Tracks usage statistics for providers."""
     
     def __init__(self, storage_path: str = None):
-        self.storage_path = Path(storage_path or Path.home() / .llm-router / usage.json)
+        self.storage_path = Path(storage_path or Path.home() / ".llm-router" / "usage.json")
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
-        self._stats = self._load()
+        self.stats: Dict[str, Dict] = self._load()
     
     def _load(self) -> Dict:
-        try:
-            if self.storage_path.exists():
-                data = json.loads(self.storage_path.read_text())
-                if data.get(date) == str(date.today()):
-                    return data
-        except:
-            pass
-        return {date: str(date.today()), providers: {}, total_cost: 0.0}
+        """Load stats from disk."""
+        if self.storage_path.exists():
+            try:
+                return json.loads(self.storage_path.read_text())
+            except Exception:
+                return {}
+        return {}
     
     def _save(self):
-        self.storage_path.write_text(json.dumps(self._stats, indent=2))
+        """Save stats to disk."""
+        self.storage_path.write_text(json.dumps(self.stats, indent=2))
     
-    def record(self, provider: str, tokens: int = 0, cost: float = 0):
-        "Record a usage event."
-        if provider not in self._stats[providers]:
-            self._stats[providers][provider] = {calls: 0, tokens: 0, cost: 0.0}
+    def record(self, provider_id: str, tokens: int = 0, cost: float = 0):
+        """Record usage for a provider."""
+        today = time.strftime("%Y-%m-%d")
         
-        self._stats[providers][provider][calls] += 1
-        self._stats[providers][provider][tokens] += tokens
-        self._stats[providers][provider][cost] += cost
-        self._stats[total_cost] += cost
+        if provider_id not in self.stats:
+            self.stats[provider_id] = {}
+        if today not in self.stats[provider_id]:
+            self.stats[provider_id][today] = {"calls": 0, "tokens": 0, "cost": 0}
+        
+        self.stats[provider_id][today]["calls"] += 1
+        self.stats[provider_id][today]["tokens"] += tokens
+        self.stats[provider_id][today]["cost"] += cost
+        
         self._save()
     
-    def get_stats(self) -> Dict[str, Any]:
-        "Get current usage statistics."
-        return self._stats
+    def get_stats(self, provider_id: str = None) -> Dict[str, Any]:
+        """Get usage statistics."""
+        if provider_id:
+            return self.stats.get(provider_id, {})
+        return self.stats
+    
+    def get_today(self, provider_id: str) -> Dict[str, Any]:
+        """Get today's usage for a provider."""
+        today = time.strftime("%Y-%m-%d")
+        return self.stats.get(provider_id, {}).get(today, {"calls": 0, "tokens": 0, "cost": 0})
