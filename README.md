@@ -25,7 +25,7 @@ LLM Router automatically routes your requests to the best available model based 
 
 ## Architecture
 
-\\
+```
 ┌─────────────┐
 │  Your App   │
 └──────┬──────┘
@@ -59,30 +59,111 @@ LLM Router automatically routes your requests to the best available model based 
 │Ollama │ │ Cloud  │ │Fallback │
 │Nodes  │ │ APIs   │ │ Node    │
 └───────┘ └────────┘ └─────────┘
-\\
+```
 
 ## Quick Start
 
-### One-Command Install
+### Installation
 
-\\ash
+```bash
 pip install llm-router
-\\
+```
 
-### From Source
+Or from source:
 
-\\ash
+```bash
 git clone https://github.com/tommieseals/llm-router.git
 cd llm-router
 pip install -e .
-\\
+```
 
-### Usage
+### Basic Usage
 
-\\python
+```python
 from llm_router import Router
 
 router = Router()
 
-# Auto-routes to best model
-response = router.query(" Write a Python function to sort a list) # Force specific task type response = router.query(Explain recursion, task=reasoning) # Check node health health = router.check_health() print(health) \\\ ### CLI \\\ash # Simple query llm-router What is the capital of France?\ # Code task (routes to code-specialized model) llm-router --task code Write a binary search in Python\ # Check health of all nodes llm-router --health # View usage stats llm-router --usage \\\ ## Configuration Create a \.env\ file or set environment variables: \\\ash # Local Ollama nodes OLLAMA_PRIMARY_URL=http://localhost:11434 OLLAMA_FALLBACK_URL=http://192.168.1.100:11434 # Cloud providers (optional) NVIDIA_API_KEY=your-key OPENROUTER_API_KEY=your-key PERPLEXITY_API_KEY=your-key # Limits NVIDIA_DAILY_LIMIT=50 \\\ ## Supported Providers | Provider | Models | Cost | Use Case | |----------|--------|------|----------| | Ollama (local) | Any | Free | General, fast queries | | NVIDIA NIM | Kimi K2.5, Llama | Free tier | Multimodal, reasoning | | OpenRouter | 100+ models | Pay-per-use | Fallback, variety | | Perplexity | Sonar | Pay-per-use | Web search, research | ## Task Routing Rules | Task | Primary | Fallback | |------|---------|----------| | code, debug | deepseek-coder | qwen-coder | | fast, simple | phi3:mini | tinyllama | | reasoning | qwen2.5:7b | gpt-4o-mini | | research | perplexity | openrouter | | multimodal | kimi | llava | ## License MIT License - see [LICENSE](LICENSE) ## Contributing PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. READMEEOF cat ~/llm-router/README.md | head -20
+# Simple query - automatically routes to best model
+response = router.query("What is the capital of France?")
+
+# Code task - routes to code-specialized model
+response = router.query("Write a Python function to sort a list", task="code")
+
+# Force specific task type
+response = router.query("Explain recursion", task="reasoning")
+
+# Check node health
+health = router.check_health()
+print(health)
+```
+
+### CLI
+
+```bash
+# Simple query
+llm-router "What is the capital of France?"
+
+# Code task (routes to code-specialized model)
+llm-router --task code "Write a binary search in Python"
+
+# Check health of all nodes
+llm-router --health
+
+# View usage stats
+llm-router --usage
+```
+
+## Configuration
+
+Create a `.env` file or set environment variables:
+
+```bash
+# Local Ollama nodes
+OLLAMA_PRIMARY_URL=http://localhost:11434
+OLLAMA_FALLBACK_URL=http://192.168.1.100:11434
+
+# Cloud providers (optional)
+NVIDIA_API_KEY=your-key
+OPENROUTER_API_KEY=your-key
+PERPLEXITY_API_KEY=your-key
+
+# Limits
+NVIDIA_DAILY_LIMIT=50
+```
+
+## Supported Providers
+
+| Provider | Models | Cost | Use Case |
+|----------|--------|------|----------|
+| Ollama (local) | Any | Free | General, fast queries |
+| NVIDIA NIM | Kimi K2.5, Llama | Free tier | Multimodal, reasoning |
+| OpenRouter | 100+ models | Pay-per-use | Fallback, variety |
+| Perplexity | Sonar | Pay-per-use | Web search, research |
+
+## Task Routing Rules
+
+| Task | Primary | Fallback |
+|------|---------|----------|
+| code, debug | deepseek-coder | qwen-coder |
+| fast, simple | phi3:mini | tinyllama |
+| reasoning | qwen2.5:7b | gpt-4o-mini |
+| research | perplexity | openrouter |
+| multimodal | kimi | llava |
+
+## Features
+
+- **Smart Routing**: Classifies queries and routes to optimal model
+- **Auto-Failover**: Automatically switches to fallback if primary is down
+- **Cost Optimization**: Prefers free tiers and local models
+- **Usage Tracking**: Respects daily API limits
+- **Health Monitoring**: Continuous node health checks
+- **Extensible**: Easy to add new providers
+
+## License
+
+MIT License - see [LICENSE](LICENSE)
+
+## Contributing
+
+PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
